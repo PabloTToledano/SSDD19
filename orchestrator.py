@@ -7,12 +7,14 @@ Ice.loadSlice('trawlnet.ice')
 import TrawlNet
 
 class Orchestrator(TrawlNet.Orchestrator):
-    def downloadTask(self, message, current=None):
-        print(message)
-        downloader.addDownloadTask()
 
+    downloader = None
 
+    def downloadTask(self, url, current=None):
+        print(url)
         sys.stdout.flush()
+        if self.downloader is not None:
+            self.downloader.addDownloadTask(url)
     
     
 
@@ -28,10 +30,14 @@ class Server(Ice.Application):
 
         proxyServer = self.communicator().stringToProxy(argv[1])
         print(argv[1])
+
         downloader = TrawlNet.DownloaderPrx.checkedCast(proxyServer)
 
         if not downloader:
             raise RuntimeError('Invalid proxy')
+
+        servant.downloader= downloader
+
 
         adapter.activate()
         self.shutdownOnInterrupt()
