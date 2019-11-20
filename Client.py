@@ -10,6 +10,8 @@ import TrawlNet
 
 class Client(Ice.Application):
     def run(self, argv):
+        if(len(argv)<3):
+            raise RuntimeError('Invalid arguments.')
         proxy = self.communicator().stringToProxy(argv[1])
         print(argv[1])
         orchestrator = TrawlNet.OrchestratorPrx.checkedCast(proxy)
