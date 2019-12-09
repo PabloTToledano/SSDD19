@@ -23,7 +23,7 @@ class Orchestrator(TrawlNet.Orchestrator):
     
 class Server(Ice.Application):
 
-def get_topic_manager(self):
+    def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
         if proxy is None:
@@ -78,4 +78,3 @@ def get_topic_manager(self):
         topic.unsubscribe(subscriber)
 
         return 0
-sys.exit(Subscriber().main(sys.argv))
