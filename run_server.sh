@@ -1,12 +1,22 @@
-#!/bin/bash
-#Lo que hay que hacer es recoger la salida del downloader para luego poder meterla como entrada del orchestrator
-PROXY=$(tempfile)
-./Downloader.py --Ice.Config=Server.config>$PROXY &
-PROCESO=$!
+#!/bin/sh
+#
 
+PYTHON=python3
+
+DOWNLOADER_CONFIG=server.config
+ORCHESTRATOR_CONFIG=$DOWNLOADER_CONFIG
+
+PRX=$(tempfile)
+$PYTHON downloader.py --Ice.Config=$DOWNLOADER_CONFIG>$PRX &
+PID=$!
+
+# Dejamos arrancar al downloader
 sleep 1
+echo "Downloader: $(cat $PRX)"
 
-./orchestrator.py --Ice.Config=Server.config "$(cat $PROXY)"
+# Lanzamos el orchestrator
+$PYTHON orchestrator.py --Ice.Config=$ORCHESTRATOR_CONFIG "$(cat $PRX)"
 
-kill -KILL $PROCESO
-
+echo "Shoutting down..."
+kill -KILL $PID
+rm $PRX
