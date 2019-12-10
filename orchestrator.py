@@ -10,6 +10,7 @@ class Orchestrator(TrawlNet.Orchestrator):
 
     downloader = None
     fileList = {}
+    orchestrators={}
 
     def downloadTask(self, url, current=None):
         print(url)
@@ -17,9 +18,19 @@ class Orchestrator(TrawlNet.Orchestrator):
         if self.downloader is not None:
             return self.downloader.addDownloadTask(url)
     
-    def write(self, message, current=None):
+    def getFileList(self, message, current=None):
         fileList[message.name]=message.hash
-        sys.stdout.flush()
+        return fileList
+    
+    def hello(self):
+        return self
+    def announce(otroOrchestrator):
+        print("Nuevo orchestrator: ")#Y aquí no sé cómo corcho mostrar un orchestrator ni qué hay que pasars
+    
+
+
+    
+
     
 class Server(Ice.Application):
 
@@ -36,6 +47,9 @@ class Server(Ice.Application):
 
     def run(self, argv):
         #Parte del servidor
+        broker = self.communicator()
+        servant = Orchestrator() 
+                
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
         proxy = adapter.add(servant, broker.stringToIdentity("Orchestrator1"))
         print(proxy, flush=True)
@@ -47,20 +61,23 @@ class Server(Ice.Application):
             print("Invalid proxy")
             return 2
 
-        broker = self.communicator()
-        servant = Orchestrator()        
-       
-        subscriber = adapter.addWithUUID(servant)   
-
+        subscriber = adapter.addWithUUID(servant)
+        #Aquí me suscribo a los dos topics
         topic_name = "UpdateEvents"
-        qos = {}     
+        topic_name2= "OrchestratorSync"
+        qos = {}
 
         try:
             topic = topic_mgr.retrieve(topic_name)
+            topic2 = topic_mgr.retrieve(topic2)
         except IceStorm.NoSuchTopic:
             topic = topic_mgr.create(topic_name)
+            topic2 = topic_mgr.create(topic2)
         
         topic.subscribeAndGetPublisher(qos, subscriber)
+        
+        #Me anuncio
+        servant.hello()
 
         print("Waiting events... '{}'".format(subscriber))        
 
