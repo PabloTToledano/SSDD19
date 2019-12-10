@@ -95,7 +95,6 @@ class Server(Ice.Application):
         try:
             topic = topic_mgr.retrieve(topic_name)
         except IceStorm.NoSuchTopic:
-            print("no such topic found, creating")
             topic = topic_mgr.create(topic_name)
 
         publisher = topic.getPublisher()

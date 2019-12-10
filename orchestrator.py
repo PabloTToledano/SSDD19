@@ -12,7 +12,6 @@ class Orchestrator(TrawlNet.Orchestrator):
 
     downloader = None
     server=None
-
     def downloadTask(self, url, current=None):
         print(url)
         sys.stdout.flush()
@@ -20,12 +19,13 @@ class Orchestrator(TrawlNet.Orchestrator):
             return self.downloader.addDownloadTask(url)
     
     def getFileList(self, message, current=None):
+        fileNameList=[]
+        for value in self.server.fileList:
+            fileNameList.append(value)
         #fileList[message.name]=message.hash
         #convertir dic a lista y return
-        return 
-    
-    def hello(self):
-        return self
+        return fileNameList
+
     def announce(otroOrchestrator):
         print("Nuevo orchestrator: ")#Y aquí no sé cómo corcho mostrar un orchestrator ni qué hay que pasars
     
@@ -35,7 +35,12 @@ class UpdateEvents(TrawlNet.UpdateEvent):
     def newFile(self,fileInfo,current=None):
         self.server.fileList[fileInfo.hash]=fileInfo.name
         print("New event: %s " %fileInfo)        
-    
+
+class OrchestratorEvent(TrawlNet.OrchestratorEvent):
+    def hello(self,orchestrator,current=None):
+        print("Me ha dicho hola: %s" %orchestrator)
+        
+        
 
     
 class Server(Ice.Application):
@@ -57,6 +62,7 @@ class Server(Ice.Application):
         broker = self.communicator()
         servant = Orchestrator() 
         updateEvents=UpdateEvents()
+        orchestratorEvent=OrchestratorEvent()
         updateEvents.server=self
                 
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
@@ -71,6 +77,7 @@ class Server(Ice.Application):
             return 2
 
         subscriberUpdate = adapter.addWithUUID(updateEvents)
+        subscriberOrches = adapter.addWithUUID(orchestratorEvent)
         #Aquí me suscribo a los dos topics
         topic_name = "UpdateEvents"
         topic_name2= "OrchestratorSync"
@@ -86,11 +93,13 @@ class Server(Ice.Application):
         except IceStorm.NoSuchTopic:
             topicOrches = topic_mgr.create(topic_name2)
         
-        
+        publisherOrches = topicOrches.getPublisher()
+        orchestratorPublisher = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisherOrches)
         topicUpdate.subscribeAndGetPublisher(qos, subscriberUpdate)
+        topicOrches.subscribeAndGetPublisher(qos, subscriberOrches)
         
-        #Me anuncio
-        servant.hello()
+        
+
 
         print("Waiting events... '{}'".format(subscriberUpdate))        
 
@@ -102,6 +111,9 @@ class Server(Ice.Application):
         servant.downloader = downloader
         servant.server=self
         adapter.activate()
+        
+        orchestratorPublisher.hello(servant) #Me anuncio
+
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
 
