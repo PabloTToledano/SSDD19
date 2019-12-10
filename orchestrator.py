@@ -3,14 +3,15 @@
 
 import sys
 import Ice
+import IceStorm
 Ice.loadSlice('trawlnet.ice')
 import TrawlNet
+
 
 class Orchestrator(TrawlNet.Orchestrator):
 
     downloader = None
-    fileList = {}
-    orchestrators={}
+    server=None
 
     def downloadTask(self, url, current=None):
         print(url)
@@ -19,8 +20,9 @@ class Orchestrator(TrawlNet.Orchestrator):
             return self.downloader.addDownloadTask(url)
     
     def getFileList(self, message, current=None):
-        fileList[message.name]=message.hash
-        return fileList
+        #fileList[message.name]=message.hash
+        #convertir dic a lista y return
+        return 
     
     def hello(self):
         return self
@@ -28,11 +30,16 @@ class Orchestrator(TrawlNet.Orchestrator):
         print("Nuevo orchestrator: ")#Y aquí no sé cómo corcho mostrar un orchestrator ni qué hay que pasars
     
 
-
+class UpdateEvents(TrawlNet.UpdateEvent):
+    server=None
+    def newFile(self,fileInfo,current=None):
+        self.server.fileList[fileInfo.hash]=fileInfo.name
+        print("New event: %s " %fileInfo)        
     
 
     
 class Server(Ice.Application):
+    fileList = {}   
 
     def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
@@ -49,6 +56,8 @@ class Server(Ice.Application):
         #Parte del servidor
         broker = self.communicator()
         servant = Orchestrator() 
+        updateEvents=UpdateEvents()
+        updateEvents.server=self
                 
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
         proxy = adapter.add(servant, broker.stringToIdentity("Orchestrator1"))
@@ -61,25 +70,29 @@ class Server(Ice.Application):
             print("Invalid proxy")
             return 2
 
-        subscriber = adapter.addWithUUID(servant)
+        subscriberUpdate = adapter.addWithUUID(updateEvents)
         #Aquí me suscribo a los dos topics
         topic_name = "UpdateEvents"
         topic_name2= "OrchestratorSync"
         qos = {}
 
         try:
-            topic = topic_mgr.retrieve(topic_name)
-            topic2 = topic_mgr.retrieve(topic2)
+            topicUpdate = topic_mgr.retrieve(topic_name)
         except IceStorm.NoSuchTopic:
-            topic = topic_mgr.create(topic_name)
-            topic2 = topic_mgr.create(topic2)
+            topicUpdate = topic_mgr.create(topic_name)
         
-        topic.subscribeAndGetPublisher(qos, subscriber)
+        try:        
+            topicOrches = topic_mgr.retrieve(topic_name2)
+        except IceStorm.NoSuchTopic:
+            topicOrches = topic_mgr.create(topic_name2)
+        
+        
+        topicUpdate.subscribeAndGetPublisher(qos, subscriberUpdate)
         
         #Me anuncio
         servant.hello()
 
-        print("Waiting events... '{}'".format(subscriber))        
+        print("Waiting events... '{}'".format(subscriberUpdate))        
 
         downloader = TrawlNet.DownloaderPrx.checkedCast(proxyServer)
 
@@ -87,11 +100,14 @@ class Server(Ice.Application):
             raise RuntimeError('Invalid proxy')
 
         servant.downloader = downloader
-
+        servant.server=self
         adapter.activate()
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
 
-        topic.unsubscribe(subscriber)
+        topicUpdate.unsubscribe(subscriberUpdate)
 
         return 0
+
+server = Server()
+sys.exit(server.main(sys.argv))
