@@ -12,6 +12,7 @@ class Orchestrator(TrawlNet.Orchestrator):
 
     downloader = None
     server=None
+    proxy=None
     def downloadTask(self, url, current=None):
         print(url)
         sys.stdout.flush()
@@ -24,11 +25,7 @@ class Orchestrator(TrawlNet.Orchestrator):
             fileNameList.append(value)
         #fileList[message.name]=message.hash
         #convertir dic a lista y return
-        return fileNameList
-
-    def announce(otroOrchestrator):
-        print("Nuevo orchestrator: ")#Y aquí no sé cómo corcho mostrar un orchestrator ni qué hay que pasars
-    
+        return fileNameList 
 
 class UpdateEvents(TrawlNet.UpdateEvent):
     server=None
@@ -37,8 +34,13 @@ class UpdateEvents(TrawlNet.UpdateEvent):
         print("New event: %s " %fileInfo)        
 
 class OrchestratorEvent(TrawlNet.OrchestratorEvent):
+    ultimoOrchestrator=None
     def hello(self,orchestrator,current=None):
-        print("Me ha dicho hola: %s" %orchestrator)
+        print("Me ha dicho hola: %s" %orchestrator.proxy)
+        ultimoOrchestrator=orchestrator
+
+    def announce(self, neworches, current=None):
+        print("Nuevo orchestrator: %s" % neworches.proxy)
         
         
 
@@ -68,6 +70,7 @@ class Server(Ice.Application):
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
         proxy = adapter.add(servant, broker.stringToIdentity("Orchestrator1"))
         print(proxy, flush=True)
+        servant.proxy=proxy
         proxyServer = self.communicator().stringToProxy(argv[1])
 
         #Parte de canal
@@ -98,8 +101,6 @@ class Server(Ice.Application):
         topicUpdate.subscribeAndGetPublisher(qos, subscriberUpdate)
         topicOrches.subscribeAndGetPublisher(qos, subscriberOrches)
         
-        
-
 
         print("Waiting events... '{}'".format(subscriberUpdate))        
 
@@ -111,8 +112,9 @@ class Server(Ice.Application):
         servant.downloader = downloader
         servant.server=self
         adapter.activate()
-        
-        orchestratorPublisher.hello(servant) #Me anuncio
+
+        orchestratorPublisher.hello(servant)
+        orchestratorPublisher.announce(orchestratorPublisher.ultimoOrchestrator)
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
