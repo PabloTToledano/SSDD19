@@ -114,7 +114,8 @@ class Server(Ice.Application):
         adapter.activate()
 
         orchestratorPublisher.hello(servant)
-        orchestratorPublisher.announce(orchestratorPublisher.ultimoOrchestrator)
+        if orchestratorPublisher.ultimoOrchestrator != servant:
+            orchestratorPublisher.announce(orchestratorPublisher.ultimoOrchestrator)
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
