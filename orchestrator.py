@@ -36,11 +36,11 @@ class UpdateEvents(TrawlNet.UpdateEvent):
 class OrchestratorEvent(TrawlNet.OrchestratorEvent):
     ultimoOrchestrator=None
     def hello(self,orchestrator,current=None):
-        print("Me ha dicho hola: %s" %orchestrator.proxy)
+        print("Me ha dicho hola: %s" %orchestrator)
         ultimoOrchestrator=orchestrator
 
     def announce(self, neworches, current=None):
-        print("Nuevo orchestrator: %s" % neworches.proxy)
+        print("Nuevo orchestrator: %s" % neworches)
         
         
 
@@ -113,9 +113,11 @@ class Server(Ice.Application):
         servant.server=self
         adapter.activate()
 
-        orchestratorPublisher.hello(servant)
-        if orchestratorPublisher.ultimoOrchestrator != servant:
-            orchestratorPublisher.announce(orchestratorPublisher.ultimoOrchestrator)
+        me = TrawlNet.OrchestratorPrx.uncheckedCast(servant.proxy)
+        orchestratorPublisher.hello(me)
+        
+        #if orchestratorPublisher != servant:
+        #    orchestratorPublisher.announce(orchestratorPublisher.ultimoOrchestrator)
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
