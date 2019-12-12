@@ -15,12 +15,11 @@ class Client(Ice.Application):
 
         proxy = self.communicator().stringToProxy(argv[1])
         orchestrator = TrawlNet.OrchestratorPrx.checkedCast(proxy)
-
         if not orchestrator:
             raise RuntimeError('Invalid proxy')
-        if(len(argv)<3): #si hay link envio peticion de descarga
+        if(len(argv)==3): #si hay link envio peticion de descarga
             orchestrator.downloadTask(argv[2])
-        if(len(argv)=2):
+        if(len(argv)==2):
             print(str(orchestrator.getFileList()))
         print("Cliente ejecutado.")
 

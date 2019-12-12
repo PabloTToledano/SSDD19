@@ -13,6 +13,7 @@ class Orchestrator(TrawlNet.Orchestrator):
     downloader = None
     server=None
     proxy=None
+
     def downloadTask(self, url, current=None):
         print(url)
         sys.stdout.flush()
@@ -21,11 +22,17 @@ class Orchestrator(TrawlNet.Orchestrator):
     
     def getFileList(self, message, current=None):
         fileNameList=[]
-        for value in self.server.fileList:
-            fileNameList.append(value)
-        #fileList[message.name]=message.hash
-        #convertir dic a lista y return
-        return fileNameList 
+        #list(self.server.fileList.values())
+        for key,value in self.server.fileList.items():
+            fileInfo=TrawlNet.FileInfo()
+            fileInfo.name=value
+            fileInfo.hash=key
+            fileNameList.append(fileInfo)
+
+        return fileNameList
+
+    def announce(self, neworches, current=None):
+        print("Me ha llegado un antiguo orchestator: %s" % neworches)
 
 class UpdateEvents(TrawlNet.UpdateEvent):
     server=None
@@ -34,15 +41,11 @@ class UpdateEvents(TrawlNet.UpdateEvent):
         print("New event: %s " %fileInfo)        
 
 class OrchestratorEvent(TrawlNet.OrchestratorEvent):
-    ultimoOrchestrator=None
+    orchPropio=None
     def hello(self,orchestrator,current=None):
-        print("Me ha dicho hola: %s" %orchestrator)
-        ultimoOrchestrator=orchestrator
-
-    def announce(self, neworches, current=None):
-        print("Nuevo orchestrator: %s" % neworches)
-        
-        
+        if orchestrator != self.orchPropio:
+            orchRemoto = TrawlNet.OrchestratorPrx.checkedCast(orchestrator)
+            orchRemoto.announce(self.orchPropio)
 
     
 class Server(Ice.Application):
@@ -71,6 +74,9 @@ class Server(Ice.Application):
         proxy = adapter.add(servant, broker.stringToIdentity("Orchestrator1"))
         print(proxy, flush=True)
         servant.proxy=proxy
+
+        me = TrawlNet.OrchestratorPrx.uncheckedCast(servant.proxy)
+        orchestratorEvent.orchPropio=me
         proxyServer = self.communicator().stringToProxy(argv[1])
 
         #Parte de canal
@@ -98,6 +104,7 @@ class Server(Ice.Application):
         
         publisherOrches = topicOrches.getPublisher()
         orchestratorPublisher = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisherOrches)
+
         topicUpdate.subscribeAndGetPublisher(qos, subscriberUpdate)
         topicOrches.subscribeAndGetPublisher(qos, subscriberOrches)
         
@@ -113,11 +120,9 @@ class Server(Ice.Application):
         servant.server=self
         adapter.activate()
 
-        me = TrawlNet.OrchestratorPrx.uncheckedCast(servant.proxy)
+       
         orchestratorPublisher.hello(me)
-        
-        #if orchestratorPublisher != servant:
-        #    orchestratorPublisher.announce(orchestratorPublisher.ultimoOrchestrator)
+
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()

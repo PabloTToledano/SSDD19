@@ -8,6 +8,7 @@ Ice.loadSlice('trawlnet.ice')
 import TrawlNet
 import os
 import hashlib
+
 try:
     import youtube_dl
 except ImportError:
