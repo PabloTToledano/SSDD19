@@ -18,7 +18,7 @@ class Client(Ice.Application):
         if not orchestrator:
             raise RuntimeError('Invalid proxy')
         if(len(argv)==3): #si hay link envio peticion de descarga
-            orchestrator.downloadTask(argv[2])
+            print(orchestrator.downloadTask(argv[2]).name)
         if(len(argv)==2):
             print(str(orchestrator.getFileList()))
         print("Cliente ejecutado.")

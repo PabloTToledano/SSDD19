@@ -15,6 +15,21 @@ except ImportError:
     print('ERROR: do you have installed youtube-dl library?')
     sys.exit(1)
     
+from urllib.parse import urlparse
+def video_id(url):
+    o = urlparse(url)
+    if o.netloc == 'youtu.be':
+        return o.path[1:]
+    elif o.netloc in ('www.youtube.com', 'youtube.com'):
+        if o.path == '/watch':
+            id_index = o.query.index('v=')
+            return o.query[id_index+2:id_index+13]
+        elif o.path[:7] == '/embed/':
+            return o.path.split('/')[2]
+        elif o.path[:3] == '/v/':
+            return o.path.split('/')[2]
+    return None  # fail?
+    
 def computeHash(filename):
     '''SHA256 hash of a file'''
     fileHash = hashlib.sha256()
@@ -67,7 +82,7 @@ class Downloader(TrawlNet.Downloader):
     def addDownloadTask(self, message, current=None):
         fileInfo=TrawlNet.FileInfo()
         fileInfo.name=download_mp3(message)
-        fileInfo.hash=computeHash(fileInfo.name)
+        fileInfo.hash=video_id(message)
         self.updateEventsPublisher.newFile(fileInfo)
         return fileInfo
 

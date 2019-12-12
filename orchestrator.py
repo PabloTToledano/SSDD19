@@ -7,17 +7,47 @@ import IceStorm
 Ice.loadSlice('trawlnet.ice')
 import TrawlNet
 
+try:
+    import youtube_dl
+except ImportError:
+    print('ERROR: do you have installed youtube-dl library?')
+    sys.exit(1)
+
+from urllib.parse import urlparse
+
+def video_id(url):
+    o = urlparse(url)
+    if o.netloc == 'youtu.be':
+        return o.path[1:]
+    elif o.netloc in ('www.youtube.com', 'youtube.com'):
+        if o.path == '/watch':
+            id_index = o.query.index('v=')
+            return o.query[id_index+2:id_index+13]
+        elif o.path[:7] == '/embed/':
+            return o.path.split('/')[2]
+        elif o.path[:3] == '/v/':
+            return o.path.split('/')[2]
+    return None  # fail?
 
 class Orchestrator(TrawlNet.Orchestrator):
 
     downloader = None
-    server=None
-    proxy=None
+    server = None
+    proxy = None
 
     def downloadTask(self, url, current=None):
         print(url)
         sys.stdout.flush()
-        if self.downloader is not None:
+        clipId=video_id(url)
+        #comprobar si existe el clipId en el server.fileList. Si existe, creo un 
+        #fileInfo que de nombre pongo el del video y de key pues la key.
+        #esto lo tiro para arriba y lo devuelvo para el cliente
+        if clipId in server.fileList:
+            fileInfo=TrawlNet.FileInfo()
+            fileInfo.name="Ya se ha descargado anteriormente: "+ str(server.fileList[clipId])
+            fileInfo.hash=clipId
+            return fileInfo
+        if self.downloader is not None:#and no está en la lista
             return self.downloader.addDownloadTask(url)
     
     def getFileList(self, message, current=None):
@@ -33,6 +63,7 @@ class Orchestrator(TrawlNet.Orchestrator):
 
     def announce(self, neworches, current=None):
         print("Me ha llegado un antiguo orchestator: %s" % neworches)
+    
 
 class UpdateEvents(TrawlNet.UpdateEvent):
     server=None
