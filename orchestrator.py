@@ -52,7 +52,6 @@ class Orchestrator(TrawlNet.Orchestrator):
     
     def getFileList(self, message, current=None):
         fileNameList=[]
-        #list(self.server.fileList.values())
         for key,value in self.server.fileList.items():
             fileInfo=TrawlNet.FileInfo()
             fileInfo.name=value
@@ -73,10 +72,18 @@ class UpdateEvents(TrawlNet.UpdateEvent):
 
 class OrchestratorEvent(TrawlNet.OrchestratorEvent):
     orchPropio=None
+    updateEventsPublisher=None
     def hello(self,orchestrator,current=None):
         if orchestrator != self.orchPropio:
             orchRemoto = TrawlNet.OrchestratorPrx.checkedCast(orchestrator)
             orchRemoto.announce(self.orchPropio)
+            #inundacion archivos viejos
+            for key,value in self.server.fileList.items():
+                fileInfo=TrawlNet.FileInfo()
+                fileInfo.name=value
+                fileInfo.hash=key
+                self.updateEventsPublisher.newFile(fileInfo)
+            
 
     
 class Server(Ice.Application):
@@ -135,6 +142,10 @@ class Server(Ice.Application):
         
         publisherOrches = topicOrches.getPublisher()
         orchestratorPublisher = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisherOrches)
+
+        publisherUpdate = topicUpdate.getPublisher()
+        updateEventsPublisher = TrawlNet.UpdateEventPrx.uncheckedCast(publisherUpdate)
+        orchestratorEvent.updateEventsPublisher= updateEventsPublisher
 
         topicUpdate.subscribeAndGetPublisher(qos, subscriberUpdate)
         topicOrches.subscribeAndGetPublisher(qos, subscriberOrches)
