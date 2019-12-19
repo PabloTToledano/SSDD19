@@ -72,6 +72,7 @@ class UpdateEvents(TrawlNet.UpdateEvent):
 
 class OrchestratorEvent(TrawlNet.OrchestratorEvent):
     orchPropio=None
+    server = None
     updateEventsPublisher=None
     def hello(self,orchestrator,current=None):
         if orchestrator != self.orchPropio:
@@ -146,6 +147,7 @@ class Server(Ice.Application):
         publisherUpdate = topicUpdate.getPublisher()
         updateEventsPublisher = TrawlNet.UpdateEventPrx.uncheckedCast(publisherUpdate)
         orchestratorEvent.updateEventsPublisher= updateEventsPublisher
+        orchestratorEvent.server=self
 
         topicUpdate.subscribeAndGetPublisher(qos, subscriberUpdate)
         topicOrches.subscribeAndGetPublisher(qos, subscriberOrches)
