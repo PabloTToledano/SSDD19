@@ -31,7 +31,8 @@ def video_id(url):
 
 class Orchestrator(TrawlNet.Orchestrator):
 
-    downloader = None
+    downloaderFactory = None
+    transferFactory = None
     server = None
     proxy = None
 
@@ -47,8 +48,11 @@ class Orchestrator(TrawlNet.Orchestrator):
             fileInfo.name="Ya se ha descargado anteriormente: "+ str(server.fileList[clipId])
             fileInfo.hash=clipId
             return fileInfo
-        if self.downloader is not None:#and no está en la lista
-            return self.downloader.addDownloadTask(url)
+        downloader = self.downloaderFactory.create()
+        if downloader is not None:#and no está en la lista
+            fileInfo = downloader.addDownloadTask(url)
+            downloader.destroy()
+            return fileInfo
     
     def getFileList(self, message, current=None):
         fileNameList=[]
@@ -59,6 +63,9 @@ class Orchestrator(TrawlNet.Orchestrator):
             fileNameList.append(fileInfo)
 
         return fileNameList
+
+    def getFile(self, message, current=None):
+        return transferFactory.create()
 
     def announce(self, neworches, current=None):
         print("Me ha llegado un antiguo orchestator: %s" % neworches)
@@ -104,19 +111,22 @@ class Server(Ice.Application):
     def run(self, argv):
         #Parte del servidor
         broker = self.communicator()
+        properties = broker.getProperties()
         servant = Orchestrator() 
         updateEvents=UpdateEvents()
         orchestratorEvent=OrchestratorEvent()
         updateEvents.server=self
                 
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
-        proxy = adapter.add(servant, broker.stringToIdentity("Orchestrator1"))
+        factory_id = properties.getProperty('OrchestratorIdentity')
+        proxy = adapter.add(servant, broker.stringToIdentity(factory_id))
         print(proxy, flush=True)
         servant.proxy=proxy
 
         me = TrawlNet.OrchestratorPrx.uncheckedCast(servant.proxy)
         orchestratorEvent.orchPropio=me
-        proxyServer = self.communicator().stringToProxy(argv[1])
+        proxyServerDownloader = self.communicator().stringToProxy(argv[1])
+        proxyServerTransfer = self.communicator().stringToProxy(argv[2])
 
         #Parte de canal
         topic_mgr = self.get_topic_manager()
@@ -155,12 +165,17 @@ class Server(Ice.Application):
 
         print("Waiting events... '{}'".format(subscriberUpdate))        
 
-        downloader = TrawlNet.DownloaderPrx.checkedCast(proxyServer)
 
-        if not downloader:
-            raise RuntimeError('Invalid proxy')
 
-        servant.downloader = downloader
+        downloaderFactory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxyServerDownloader)
+        if not downloaderFactory:
+            raise RuntimeError('Invalid proxy-Down')
+
+        servant.downloaderFactory = downloaderFactory
+        
+        transferFactory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxyServerTransfer)
+        if not transferFactory:
+            raise RuntimeError('Invalid proxy-Trans')
         servant.server=self
         adapter.activate()
 

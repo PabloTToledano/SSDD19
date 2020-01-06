@@ -85,8 +85,22 @@ class Downloader(TrawlNet.Downloader):
         fileInfo.hash=video_id(message)
         self.updateEventsPublisher.newFile(fileInfo)
         return fileInfo
-
     
+    def destroy(self, current):
+        try:
+            current.adapter.remove(current.id)
+            print('TRASFER DESTROYED', flush=True)
+        except Exception as e:
+            print(e, flush=True)       
+
+
+class DownloaderFactory(TrawlNet.DownloaderFactory):
+    def create(self, message, current):
+        servant = Downloader()
+        proxy = current.adapter.addWithUUID(servant)
+        print('# New downloader for {} #'.format(message), flush=True)
+
+        return TrawlNet.DownloaderPrx.checkedCast(proxy)
 
 
 class Server(Ice.Application):
@@ -118,14 +132,18 @@ class Server(Ice.Application):
 
 
         #parte del sirviente
+
         broker = self.communicator()
-        servant = Downloader()
-        servant.updateEventsPublisher=updateEventsPublisher
+        properties = broker.getProperties()
+
+        servant = DownloaderFactory()
+        Downloader.updateEventsPublisher=updateEventsPublisher
         adapter = broker.createObjectAdapter("DownloaderAdapter")
-        proxy = adapter.add(servant, broker.stringToIdentity("downloader1"))
+        factory_id = properties.getProperty('DownloaderIdentity')
+        proxy = adapter.add(servant, broker.stringToIdentity(factory_id))
         
 
-        print(proxy,flush=True)
+        print('{}'.format(proxy), flush=True)
 
         adapter.activate()
         self.shutdownOnInterrupt()
