@@ -3,7 +3,7 @@
 
 echo "Creating directories in /tmp..."
 mkdir -p /tmp/YoutubeDownloaderApp
-cp trawlnet.ice orchestrator.py downloader_factory.py transfer_factory.py \
+sudo cp trawlnet.ice orchestrator.py downloader_factory.py transfer_factory.py /
 echo "Exec icepatch2calc..."
 icepatch2calc /tmp/YoutubeDownloaderApp
 

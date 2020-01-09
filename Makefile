@@ -35,7 +35,7 @@ run-downloads-node: /tmp/db/downloads-node/servers
 
 app-workspace: /tmp/YoutubeDownloaderApp
 	cp trawlnet.ice orchestrator.py downloader_factory.py \
-	transfer_factory.py utils.py /tmp/YoutubeDownloaderApp
+	transfer_factory.py /tmp/YoutubeDownloaderApp
 	icepatch2calc /tmp/YoutubeDownloaderApp
 
 /tmp/%:
