@@ -2,6 +2,7 @@
 <!-- This file was written by IceGrid GUI -->
 <icegrid>
    <application name="YoutubeDownloadsApp">
+      <distrib icepatch="${application}.IcePatch2/server"/>
       <service-template id="IceStorm">
          <parameter name="instance-name" default="${application}.IceStorm"/>
          <parameter name="topic-manager-endpoints" default="default"/>
@@ -136,7 +137,7 @@
          <server-instance template="OrchestratorTemplate" index="3"/>
       </node>
       <node name="registry-node">
-         <server-instance template="IcePatch2" directory="/home/pablo/Distribuidos/Proyecto/SSDD19"/>
+         <server-instance template="IcePatch2" directory="/tmp/YoutubeDownloaderApp"/>
          <server-instance template="IceStorm"/>
       </node>
    </application>

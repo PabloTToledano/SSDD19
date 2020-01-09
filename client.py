@@ -56,7 +56,7 @@ class Client(Ice.Application):
                 print(fileInfoName)
                 transfer_request(fileInfoName)
             if(argv[2] == "-t"):
-                transfer_request(argv[3])    
+                transfer_request(argv[3])     
                 
         if(len(argv) == 2):
             print(str(self.orchestrator.getFileList()))
