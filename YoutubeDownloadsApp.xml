@@ -128,11 +128,23 @@
          </server>
       </server-template>
       <node name="downloads-node">
-         <server-instance template="DownloaderFactoryTemplate" index="1"/>
-         <server-instance template="TransferFactoryTemplate" index="1"/>
+         <server-instance template="DownloaderFactoryTemplate" index="1">
+            <properties>
+               <property name="Ice.StdErr" value="${application.distrib}/server-out.txt"/>
+            </properties>
+         </server-instance>
+         <server-instance template="TransferFactoryTemplate" index="1">
+            <properties>
+               <property name="Ice.StdErr" value="${application.distrib}/server-out.txt"/>
+            </properties>
+         </server-instance>
       </node>
       <node name="orchestrator-node">
-         <server-instance template="OrchestratorTemplate" index="1"/>
+         <server-instance template="OrchestratorTemplate" index="1">
+            <properties>
+               <property name="Ice.StdErr" value="${application.distrib}/server-out.txt"/>
+            </properties>
+         </server-instance>
          <server-instance template="OrchestratorTemplate" index="2"/>
          <server-instance template="OrchestratorTemplate" index="3"/>
       </node>
