@@ -138,8 +138,8 @@ class Server(Ice.Application):
 
         servant = DownloaderFactory()
         Downloader.updateEventsPublisher=updateEventsPublisher
-        adapter = broker.createObjectAdapter("DownloaderAdapter")
-        factory_id = properties.getProperty('DownloaderIdentity')
+        adapter = broker.createObjectAdapter("DownloaderFactoryAdapter")
+        factory_id = properties.getProperty('Identity')
         proxy = adapter.add(servant, broker.stringToIdentity(factory_id))
         
 

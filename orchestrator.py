@@ -51,6 +51,7 @@ class Orchestrator(TrawlNet.Orchestrator):
         downloader = self.downloaderFactory.create()
         if downloader is not None:#and no está en la lista
             fileInfo = downloader.addDownloadTask(url)
+            print("descargando...")
             downloader.destroy()
             return fileInfo
     
@@ -118,15 +119,15 @@ class Server(Ice.Application):
         updateEvents.server=self
                 
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
-        factory_id = properties.getProperty('OrchestratorIdentity')
-        proxy = adapter.add(servant, broker.stringToIdentity(factory_id))
+        orchestrator_id = properties.getProperty('Identity')
+        proxy = adapter.add(servant, broker.stringToIdentity(orchestrator_id))
         print(proxy, flush=True)
         servant.proxy=proxy
 
         me = TrawlNet.OrchestratorPrx.uncheckedCast(servant.proxy)
         orchestratorEvent.orchPropio=me
-        proxyServerDownloader = self.communicator().stringToProxy(argv[1])
-        proxyServerTransfer = self.communicator().stringToProxy(argv[2])
+        proxyServerDownloader = self.communicator().stringToProxy("downloaderFactory1")
+        proxyServerTransfer = self.communicator().stringToProxy("transferFactory1")
 
         #Parte de canal
         topic_mgr = self.get_topic_manager()
@@ -173,7 +174,7 @@ class Server(Ice.Application):
 
         servant.downloaderFactory = downloaderFactory
         
-        transferFactory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxyServerTransfer)
+        transferFactory = TrawlNet.TransferFactoryPrx.checkedCast(proxyServerTransfer)
         if not transferFactory:
             raise RuntimeError('Invalid proxy-Trans')
         servant.server=self

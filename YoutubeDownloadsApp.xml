@@ -47,6 +47,8 @@
             <properties>
                <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
                <property name="Ice.ProgramName" value="${server}.DownloaderFactory${index}"/>
+               <property name="IceStorm.TopicManager.Proxy" value="YoutubeDownloadsApp.IceStorm/TopicManager"/>
+               <property name="Ice.StdErr" value="${application.distrib}/server-outErr.txt"/>
             </properties>
             <adapter name="DownloaderFactoryAdapter" endpoints="default" id="${server}.DownloaderFactoryAdapter">
                <object identity="downloaderFactory${index}" type="::TrawlNet:DownloaderFactory" property="Identity"/>
@@ -109,8 +111,10 @@
             <properties>
                <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
                <property name="Ice.ProgramName" value="${server}.Orchestrator${index}"/>
+               <property name="IceStorm.TopicManager.Proxy" value="YoutubeDownloadsApp.IceStorm/TopicManager"/>
+               <property name="Ice.StdErr" value="${application.distrib}/server-outErr.txt"/>
             </properties>
-            <adapter name="OrchestratorAdapter" endpoints="default" id="${server}.OrchestratorAdapter">
+            <adapter name="OrchestratorAdapter" endpoints="default" id="${server}.OrchestratorAdapter" replica-group="OrchestratorReplicaGroup">
                <object identity="orchestrator${index}" type="::TrawlNet::Orchestrator" property="Identity"/>
             </adapter>
          </server>
@@ -127,12 +131,12 @@
             </adapter>
          </server>
       </server-template>
+      <replica-group id="OrchestratorReplicaGroup">
+         <load-balancing type="random" n-replicas="0"/>
+         <object identity="orchestrator" type="::TrawlNet::Orchestrator"/>
+      </replica-group>
       <node name="downloads-node">
-         <server-instance template="DownloaderFactoryTemplate" index="1">
-            <properties>
-               <property name="Ice.StdErr" value="${application.distrib}/server-out.txt"/>
-            </properties>
-         </server-instance>
+         <server-instance template="DownloaderFactoryTemplate" index="1"/>
          <server-instance template="TransferFactoryTemplate" index="1">
             <properties>
                <property name="Ice.StdErr" value="${application.distrib}/server-out.txt"/>
@@ -140,11 +144,7 @@
          </server-instance>
       </node>
       <node name="orchestrator-node">
-         <server-instance template="OrchestratorTemplate" index="1">
-            <properties>
-               <property name="Ice.StdErr" value="${application.distrib}/server-out.txt"/>
-            </properties>
-         </server-instance>
+         <server-instance template="OrchestratorTemplate" index="1"/>
          <server-instance template="OrchestratorTemplate" index="2"/>
          <server-instance template="OrchestratorTemplate" index="3"/>
       </node>

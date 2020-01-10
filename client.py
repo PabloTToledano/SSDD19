@@ -50,15 +50,15 @@ class Client(Ice.Application):
 
         # argv[1]=proxy , 2=opcion , 3=url o name del archivo
 
-        if(len(argv)==3): #si hay link envio peticion de descarga
+        if(len(argv)==4): #si hay link envio peticion de descarga
             if(argv[2] == "-d"):
-                fileInfoName = self.orchestrator.downloadTask(argv[3]).name
-                print(fileInfoName)
-                transfer_request(fileInfoName)
+                fileInfoName = self.orchestrator.downloadTask(argv[3])
+                print(fileInfoName.name)
+                transfer_request(fileInfoName.name)
             if(argv[2] == "-t"):
                 transfer_request(argv[3])     
                 
-        if(len(argv) == 2):
+        if(len(argv) == 3):
             print(str(self.orchestrator.getFileList()))
         print("Cliente ejecutado.")
 
