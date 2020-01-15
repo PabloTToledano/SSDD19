@@ -3,21 +3,21 @@
 
 import sys
 import Ice
-Ice.loadSlice('trawlnet.ice')
+
+Ice.loadSlice("trawlnet.ice")
 import TrawlNet
 import os
 import binascii
 
-APP_DIRECTORY = './'
-DOWNLOADS_DIRECTORY = os.path.join(APP_DIRECTORY, 'downloads')
+APP_DIRECTORY = "./"
+DOWNLOADS_DIRECTORY = os.path.join(APP_DIRECTORY, "downloads")
 
 # primer argumento es el proxy, segundo url para descargar
 
 
-
 class Client(Ice.Application):
     orchestrator = None
-   
+
     def transfer_request(self, file_name):
         remote_EOF = False
         BLOCK_SIZE = 1024
@@ -29,7 +29,7 @@ class Client(Ice.Application):
             print(e.reason)
             return 1
 
-        with open(os.path.join(DOWNLOADS_DIRECTORY, file_name), 'wb') as file_:
+        with open(os.path.join(DOWNLOADS_DIRECTORY, file_name), "wb") as file_:
             remote_EOF = False
             while not remote_EOF:
                 data = transfer.recv(BLOCK_SIZE)
@@ -42,32 +42,31 @@ class Client(Ice.Application):
             transfer.close()
 
         transfer.destroy()
-        print('Transfer finished!')
+        print("Transfer finished!")
 
     def run(self, argv):
-        if(len(argv)<1):
-            raise RuntimeError('Invalid arguments.')
+        if len(argv) < 1:
+            raise RuntimeError("Invalid arguments.")
 
         proxy = self.communicator().stringToProxy(argv[1])
         self.orchestrator = TrawlNet.OrchestratorPrx.checkedCast(proxy)
         if not self.orchestrator:
-            raise RuntimeError('Invalid proxy')
+            raise RuntimeError("Invalid proxy")
 
         # argv[1]=proxy , 2=opcion , 3=url o name del archivo
 
-        if(len(argv)==4): #si hay link envio peticion de descarga
-            if(argv[2] == "-d"):
+        if len(argv) == 4:  # si hay link envio peticion de descarga
+            if argv[2] == "-d":
                 fileInfoName = self.orchestrator.downloadTask(argv[3])
                 print(fileInfoName.name)
-            if(argv[2] == "-t"):
-                self.transfer_request(argv[3])     
-                
-        if(len(argv) == 2):
+            if argv[2] == "-t":
+                self.transfer_request(argv[3])
+
+        if len(argv) == 2:
             print(str(self.orchestrator.getFileList()))
         print("Cliente ejecutado.")
 
         return 0
-
 
 
 sys.exit(Client().main(sys.argv))
