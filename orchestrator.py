@@ -66,7 +66,7 @@ class Orchestrator(TrawlNet.Orchestrator):
         return fileNameList
 
     def getFile(self, message, current=None):
-        return transferFactory.create()
+        return self.transferFactory.create(message)
 
     def announce(self, neworches, current=None):
         print("Me ha llegado un antiguo orchestator: %s" % neworches)
@@ -121,8 +121,12 @@ class Server(Ice.Application):
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
         orchestrator_id = properties.getProperty('Identity')
         proxy = adapter.add(servant, broker.stringToIdentity(orchestrator_id))
+  
+        proxy = adapter.createDirectProxy(proxy.ice_getIdentity())
         print(proxy, flush=True)
         servant.proxy=proxy
+
+
 
         me = TrawlNet.OrchestratorPrx.uncheckedCast(servant.proxy)
         orchestratorEvent.orchPropio=me
@@ -136,7 +140,9 @@ class Server(Ice.Application):
             return 2
 
         subscriberUpdate = adapter.addWithUUID(updateEvents)
+        subscriberUpdate = adapter.createDirectProxy(subscriberUpdate.ice_getIdentity())
         subscriberOrches = adapter.addWithUUID(orchestratorEvent)
+        subscriberOrches = adapter.createDirectProxy(subscriberOrches.ice_getIdentity())
         #Aquí me suscribo a los dos topics
         topic_name = "UpdateEvents"
         topic_name2= "OrchestratorSync"
@@ -177,6 +183,8 @@ class Server(Ice.Application):
         transferFactory = TrawlNet.TransferFactoryPrx.checkedCast(proxyServerTransfer)
         if not transferFactory:
             raise RuntimeError('Invalid proxy-Trans')
+        servant.transferFactory = transferFactory
+
         servant.server=self
         adapter.activate()
 

@@ -58,12 +58,14 @@ def download_mp3(url, destination='./'):
 
 class NullLogger:
     def debug(self, msg):
+        print(msg)
         pass
 
     def warning(self, msg):
         pass
 
     def error(self, msg):
+        print(msg)
         pass
 
 _YOUTUBEDL_OPTS_ = {
@@ -95,11 +97,9 @@ class Downloader(TrawlNet.Downloader):
 
 
 class DownloaderFactory(TrawlNet.DownloaderFactory):
-    def create(self, message, current):
+    def create(self, current):
         servant = Downloader()
         proxy = current.adapter.addWithUUID(servant)
-        print('# New downloader for {} #'.format(message), flush=True)
-
         return TrawlNet.DownloaderPrx.checkedCast(proxy)
 
 

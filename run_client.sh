@@ -2,7 +2,7 @@
 #
 
 echo "Downloading audio..."
-./client.py --download <url> \
+./client.py -d <url> \
 --Ice.Config=client.config
 
 echo ""
@@ -11,5 +11,5 @@ echo "List request..."
 
 echo ""
 echo "Init transfer..."
-./client.py --transfer <file_name> \
+./client.py -t <file_name> \
 --Ice.Config=client.config

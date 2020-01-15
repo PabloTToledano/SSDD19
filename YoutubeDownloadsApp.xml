@@ -109,10 +109,11 @@
          <parameter name="index"/>
          <server id="OrchestratorServer${index}" activation="on-demand" exe="./orchestrator.py" pwd="${application.distrib}">
             <properties>
-               <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
+               <property name="Ice.StdOut" value="${application.distrib}/server-out${index}.txt"/>
                <property name="Ice.ProgramName" value="${server}.Orchestrator${index}"/>
                <property name="IceStorm.TopicManager.Proxy" value="YoutubeDownloadsApp.IceStorm/TopicManager"/>
                <property name="Ice.StdErr" value="${application.distrib}/server-outErr.txt"/>
+               <property name="Identity" value="orchestrator"/>
             </properties>
             <adapter name="OrchestratorAdapter" endpoints="default" id="${server}.OrchestratorAdapter" replica-group="OrchestratorReplicaGroup">
                <object identity="orchestrator${index}" type="::TrawlNet::Orchestrator" property="Identity"/>

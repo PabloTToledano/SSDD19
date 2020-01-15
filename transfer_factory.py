@@ -36,10 +36,9 @@ class TransferI(TrawlNet.Transfer):
 
 class TransferFactoryI(TrawlNet.TransferFactory):
     def create(self, file_name, current):
-        file_path = os.path.join(DOWNLOADS_DIRECTORY, file_name)
-        servant = TransferI(file_path)
+        servant = TransferI(file_name)
         proxy = current.adapter.addWithUUID(servant)
-        print('# New transfer for {} #'.format(file_path), flush=True)
+        print('# New transfer for {} #'.format(file_name), flush=True)
 
         return TrawlNet.TransferPrx.checkedCast(proxy)
 

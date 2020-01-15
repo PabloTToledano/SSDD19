@@ -5,6 +5,11 @@ import sys
 import Ice
 Ice.loadSlice('trawlnet.ice')
 import TrawlNet
+import os
+import binascii
+
+APP_DIRECTORY = './'
+DOWNLOADS_DIRECTORY = os.path.join(APP_DIRECTORY, 'downloads')
 
 # primer argumento es el proxy, segundo url para descargar
 
@@ -54,11 +59,10 @@ class Client(Ice.Application):
             if(argv[2] == "-d"):
                 fileInfoName = self.orchestrator.downloadTask(argv[3])
                 print(fileInfoName.name)
-                transfer_request(fileInfoName.name)
             if(argv[2] == "-t"):
-                transfer_request(argv[3])     
+                self.transfer_request(argv[3])     
                 
-        if(len(argv) == 3):
+        if(len(argv) == 2):
             print(str(self.orchestrator.getFileList()))
         print("Cliente ejecutado.")
 
